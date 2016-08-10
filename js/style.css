@@ -1,0 +1,25 @@
+.main-content
+{
+	float: left;
+	width: 100%;
+}
+.left-content
+{
+	float: left;
+	width: 30%;
+}
+.right-content
+{
+	float: left;
+	width: 69%;
+}
+.content-action
+{
+	float: left;
+	width: 100%;
+}
+.content-action .list-image
+{
+	float : left;
+	width : 20%;
+}
