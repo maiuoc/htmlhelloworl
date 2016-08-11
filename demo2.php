@@ -21,6 +21,7 @@
 		<div class="content-action action-text">
 			<textarea id="pdc-text" name="pdc_text"></textarea>
 			<button type="button" id="pdc-add-text">Add Text</button>
+			<button type="button" id="pdc-update-text">update Text</button>
 		</div>
 		<?php $arrayBg = array('FFFFFF','F2F3E2','FDF027','FAD431','EFA14A','E7722F','E45D2C','C20034','9B0F33','EF7490','D01A74','D0A2C8','8766A6','692C89','23529E','333181','7EACD8','81D1CF','1B96A8','13874E'); ?>
 		<div class="content-action list-background">
@@ -38,15 +39,18 @@
 		  </div>
 		</div>
 		<div class="content-action color-svg" style="display : none;">
-			 <ul class="pdc-background-color-svg">
-				<?php foreach($arrayBg as $bg) : ?>
-				<li>
-				   <a title="White" style="background-color:#<?php echo $bg; ?>; color:#<?php echo $bg; ?>;">
-					ABC
-				   </a>
-				</li>
-				<?php endforeach; ?>
-			 </ul>
+			<div class="background-color-list">
+				<label>Choose background For svg</label>
+				<ul class="pdc-background-color-svg">
+					<?php foreach($arrayBg as $bg) : ?>
+					<li>
+					   <a title="White" style="background-color:#<?php echo $bg; ?>; color:#<?php echo $bg; ?>;">
+						ABC
+					   </a>
+					</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
 		</div>
 	</div>
 	<div class="right-content">

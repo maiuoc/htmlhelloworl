@@ -76,7 +76,7 @@ jQuery(document).ready(function(){
 					price : options.price || 0,
 					scaleX: (_canvans.width / loadObject.width / 2),
                     scaleY: (_canvans.height / loadObject.height / 2),
-					object_type: options.object_type || 'image',
+					object_type: options.object_type || 'image_svg',
 					borderColor : '#808080',
 					cornerColor : 'rgba(68,180,170,0.7)',
 					cornerSize: 12,
@@ -105,6 +105,7 @@ jQuery(document).ready(function(){
                 textAlign: "left",
                 //perPixelTargetFind : true,
                 fill: "#000",
+				object_type : 'text',
                 price: options.price,
                 lineHeight: 1.3,
                 borderColor: '#808080',
@@ -199,6 +200,35 @@ jQuery(document).ready(function(){
 			_canvans.insertAt(redirctBgColor,1);
 			_canvans.renderAll();
 		},
+		updateColorObject : function(color,_canvans)
+		{
+			var _canvans = _canvans|| this.getActiveCanvas(1);
+			obj = _canvans.getActiveObject();
+			if(obj.object_type == 'image_svg' || obj.object_type == 'text')
+			{
+				var newObj = obj;
+				_canvans.remove(obj);
+				newObj.set({
+					fill : color
+				});
+				_canvans.add(newObj).setActiveObject(newObj);
+			}
+		},
+		updateText : function(strText,_canvans)
+		{
+			var _canvans = _canvans|| this.getActiveCanvas(1);
+			obj = _canvans.getActiveObject();
+			if(obj.object_type != 'text')
+			{
+				return false;
+			}
+			var newObj = obj;
+			_canvans.remove(obj);
+			newObj.set({
+				text : strText
+			});
+			_canvans.add(newObj).setActiveObject(newObj);
+		},
 		getActiveCanvas : function(sideId)
 		{
 			return this.allCanvas[sideId];
@@ -207,7 +237,25 @@ jQuery(document).ready(function(){
 		{
 			currentCanvans = this.getActiveCanvas(1);
 				currentCanvans.on('object:selected', function(e) { // or 'object:added'
-				console.log('w');
+				console.log(e.target);
+				if(e.target)
+				{
+					if(e.target.object_type == 'image_svg')
+					{
+						$('.color-svg').css('display','block');
+					}
+					else if(e.target.object_type == 'text')
+					{
+						var text = e.target.text;
+						$('.color-svg').css('display','block');
+						$('#pdc-text').val(text);
+					}
+					else
+					{
+						$('.color-svg').css('display','none');
+					}
+				}
+				
 			});
 		},
 		init : function()
@@ -238,6 +286,17 @@ jQuery(document).ready(function(){
 				console.log(color);
 				self.changeBackrooundColorLayer(color);
 			});
+			$('.pdc-background-color-svg li a').click(function(){
+				var color = $(this).css('background-color');
+				self.updateColorObject(color);
+			});
+			$('#pdc-update-text').click(function(){
+				var text = $('#pdc-text').val();
+				if($.trim(text) != '')
+				{
+					self.updateText(text);
+				}
+			})
 		}
 	}
 	// gunny.init();
