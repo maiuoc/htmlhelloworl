@@ -21,11 +21,11 @@ jQuery(document).ready(function(){
 			//add background
 			currentCanvans = this.getActiveCanvas(1);
 			var options = {price : 10};
-			this.addBackgroundLayer('assets/blue-background.png',options);
+			// this.addBackgroundLayer('assets/blue-background.png',options);
 			//add mask layer
 			this.addOverlayLayer('assets/overlay.png',options);
 			//add background color
-			 // this.addBackgroundColorLayer('#09F745');
+			this.addBackgroundColorLayer('#09F745');
 		},
 		addImage : function(imageSrc,options,callback)
 		{
@@ -98,7 +98,7 @@ jQuery(document).ready(function(){
 			var options = options || {};
 			var _canvans = this.getActiveCanvas(1); 
 			var textObjbect = new fabric.Text(text,{
-				fontFamily: 'Arial',
+				// fontFamily: 'Area',
                 //left: center.left,
                 //top: center.top,
                 fontSize: fontSize || 25,
@@ -214,7 +214,7 @@ jQuery(document).ready(function(){
 				_canvans.add(newObj).setActiveObject(newObj);
 			}
 		},
-		updateText : function(strText,_canvans)
+		updateText : function(mValue,task,_canvans)
 		{
 			var _canvans = _canvans|| this.getActiveCanvas(1);
 			obj = _canvans.getActiveObject();
@@ -224,10 +224,20 @@ jQuery(document).ready(function(){
 			}
 			var newObj = obj;
 			_canvans.remove(obj);
-			newObj.set({
-				text : strText
-			});
+			switch(task)
+			{
+				case  'update_text' :
+					newObj.set({
+						text : mValue
+					});
+				break;
+				case 'change_fontfamily' :
+					newObj.set({
+						fontFamily : mValue
+					});
+			}
 			_canvans.add(newObj).setActiveObject(newObj);
+			_canvans.renderAll();
 		},
 		getActiveCanvas : function(sideId)
 		{
@@ -248,11 +258,13 @@ jQuery(document).ready(function(){
 					{
 						var text = e.target.text;
 						$('.color-svg').css('display','block');
+						$('.gunny-font-family').css('display','block');
 						$('#pdc-text').val(text);
 					}
 					else
 					{
 						$('.color-svg').css('display','none');
+						$('.gunny-font-family').css('display','none');
 					}
 				}
 				
@@ -294,8 +306,14 @@ jQuery(document).ready(function(){
 				var text = $('#pdc-text').val();
 				if($.trim(text) != '')
 				{
-					self.updateText(text);
+					var mValue = text;
+					self.updateText(mValue,'update_text');
 				}
+			});
+			$('#gunny_font').change(function(){
+				var font = $(this).val();
+				var mValue = font;
+				self.updateText(mValue,'change_fontfamily');
 			})
 		}
 	}

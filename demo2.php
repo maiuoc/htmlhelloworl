@@ -6,8 +6,44 @@
 	<script src="js/fabric2.js" ></script>
 	<script src="js/gunny.js" ></script>
 	<link href="js/style.css" media="all" type="text/css" rel="stylesheet">
+	
  </head>
 <body>
+<style type="text/css">
+            @font-face {
+        font-family: 'gooddog';
+        src: url('js/fonts/gooddog.otf');
+    }
+            @font-face {
+        font-family: 'lobster';
+        src: url('js/fonts/lobster.otf');
+    }
+            @font-face {
+        font-family: 'lokicola';
+        src: url('js/fonts/lokicola.ttf');
+    }
+            @font-face {
+        font-family: 'madewithb';
+        src: url('js/fonts/madewithb.ttf');
+    }
+            @font-face {
+        font-family: 'montague';
+        src: url('js/fonts/montague.ttf');
+    }
+            @font-face {
+        font-family: 'organo';
+        src: url('js/fonts/organo.ttf');
+    }
+            @font-face {
+        font-family: 'playball';
+        src: url('js/fonts/playball.ttf');
+    }
+            @font-face {
+        font-family: 'riesling';
+        src: url('js/fonts/riesling.ttf');
+    }
+    </style>
+	<?php $arfonts = array('gooddog','lobster','lokicola','madewithb','montague','playball','riesling'); ?>
 <div class="main-content">
 	<div class="left-content">
 		<div class="content-action">
@@ -50,6 +86,16 @@
 					</li>
 					<?php endforeach; ?>
 				</ul>
+			</div>
+		</div>
+		<div class="content-action gunny-font-family" style="display : none;">
+			<div class="background-color-list">
+				<label>Select font-family</label>
+				<select name="gunny_font" id="gunny_font">
+					<?php foreach($arfonts as $arfont) : ?>
+						<option value="<?php echo $arfont; ?>"><?php echo $arfont ?></option>
+					<?php endforeach; ?>
+				</select>
 			</div>
 		</div>
 	</div>
