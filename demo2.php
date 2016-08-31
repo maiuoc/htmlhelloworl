@@ -98,10 +98,17 @@
 				</select>
 			</div>
 		</div>
+		<div class="content-action" style="">
+			<button id="preview-canvas" type="button">Preview</button>
+		</div>
+		<div class="content-action" style="">
+			<button id="save-to-json" type="button">Save To json</button>
+		</div>
 	</div>
 	<div class="right-content">
 		<canvas id="c" style="border:1px solid black;" ></canvas>
 	</div>
+	<div class="canvas-preview"></div>
 </div>
 
 <script type="text/javascript">

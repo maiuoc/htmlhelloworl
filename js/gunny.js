@@ -10,6 +10,24 @@ jQuery(document).ready(function(){
 				console.log(o);
 			});
 		},
+		doRequest: function (url, data, callback) {
+            var self = this;
+			$.ajax({
+				type: "POST",
+				url: url,
+				data: data,
+				beforeSend: function() {
+					console.log("data sending");
+				},
+				error: function() {
+					console.log("Something went wrong...");
+                    alert("Something went wrong! This ajax request has failed.");
+				}, 
+				success: function(response) {
+					callback(response);
+				}
+			});
+		},
 		prepareCanvans : function()
 		{
 			this.allCanvas[1] = new fabric.Canvas('c');
@@ -197,7 +215,7 @@ jQuery(document).ready(function(){
 				evented: false,
 				hasBorder : false,
 			});
-			_canvans.insertAt(redirctBgColor,1);
+			_canvans.insertAt(redirctBgColor,0);
 			_canvans.renderAll();
 		},
 		updateColorObject : function(color,_canvans)
@@ -242,6 +260,13 @@ jQuery(document).ready(function(){
 		getActiveCanvas : function(sideId)
 		{
 			return this.allCanvas[sideId];
+		},
+		explodeCanvas : function(_canvans)
+		{
+			var _canvans = _canvans|| this.getActiveCanvas(1);
+			console.log(_canvans.toSVG());
+			var svgCanvas = _canvans.toSVG();
+			$('.canvas-preview').html(svgCanvas);
 		},
 		canvasEvent : function()
 		{
@@ -314,6 +339,14 @@ jQuery(document).ready(function(){
 				var font = $(this).val();
 				var mValue = font;
 				self.updateText(mValue,'change_fontfamily');
+			});
+			$('#preview-canvas').click(function()
+			{
+				self.explodeCanvas();
+			});
+			//save to json
+			$('#save-to-json').click(function(){
+				self.saveToJson();
 			})
 		}
 	}
