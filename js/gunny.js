@@ -1,13 +1,61 @@
 jQuery(document).ready(function(){
 	gunny  = {
 		allCanvas : {},
+		urlSaveJsonFile : $('#base-url').length ? $('#base-url').val() : '',
 		saveToJson : function ()
 		{
+			//canvassie available
+			var arCanvasSide = {color_code : '',color_id : '0', filename : '',final_price : 0.00,product_id : 2};
 			var currentCanvans = this.getActiveCanvas(1);
-			console.log(JSON.stringify(currentCanvans));
-			var objects = currentCanvans.getObjects()
+			var customAttrs = ['name', 'isrc', 'price', 'object_type', 'selectable', 'scale', 'evented'];
+			//console.log(JSON.stringify(currentCanvans));
+			var objects = currentCanvans.getObjects();
+			//console.log(currentCanvans.toJSON(customAttrs));
+			arCanvasSide.json = currentCanvans.toJSON(customAttrs);
+			arCanvasSide.svg = currentCanvans.toSVG();
+			// console.log(arCanvasSide);
 			objects.forEach(function(o) {
-				console.log(o);
+				// console.log(o);
+				if(!isNaN(o.price) && parseFloat(o.price) > 0)
+				{
+					arCanvasSide.final_price += parseFloat(o.price);
+				}
+			});
+			this.saveJsonFile(arCanvasSide,function(response){
+				if(response.status == 'success') 
+				{
+					//preview svg image
+					var svgCanvas = arCanvasSide.svg;
+					$('.canvas-preview').html(svgCanvas);
+				}
+				else
+				{
+					alert('error');
+				}
+			})
+			
+		},
+		saveJsonFile : function(canvasSide,callback)
+		{
+			var tempData = {
+				options : {},
+                side_config : canvasSide
+			};
+			$.ajax({
+				type: "POST",
+				url: this.urlSaveJsonFile+'/saveJson.php',
+				data: JSON.stringify(tempData),
+				contentType: 'application/json',
+				beforeSend: function() {
+					console.log("data sending");
+				},
+				error: function() {
+					console.log("Something went wrong...");
+                    alert("Something went wrong! This ajax request has failed.");
+				}, 
+				success: function(response) {
+					callback(response);
+				}
 			});
 		},
 		doRequest: function (url, data, callback) {
@@ -44,6 +92,10 @@ jQuery(document).ready(function(){
 			this.addOverlayLayer('assets/overlay.png',options);
 			//add background color
 			this.addBackgroundColorLayer('#09F745');
+		},
+		restoreDesignFromJson : function(jsonFile)
+		{
+			
 		},
 		addImage : function(imageSrc,options,callback)
 		{
@@ -313,9 +365,10 @@ jQuery(document).ready(function(){
 			//add text
 			$('#pdc-add-text').click(function(){
 				var text = $('#pdc-text').val();
+				var options = {price : 5};
 				if($.trim(text) != '')
 				{
-					self.addText(text,30);
+					self.addText(text,30,options);
 				}
 			});
 			$('.pdc-background-color-list li a').click(function(){

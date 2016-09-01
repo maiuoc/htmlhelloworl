@@ -45,6 +45,15 @@
     </style>
 	<?php $arfonts = array('gooddog','lobster','lokicola','madewithb','montague','playball','riesling'); ?>
 <div class="main-content">
+	<input id="base-url" type="hidden" name="base_url" value="http://<?php echo $_SERVER['SERVER_NAME'].'/htmlhelloworl/'; ?>" />
+	<?php $jsonFile = ''; ?>
+	<?php 
+	$myfile = fopen(__DIR__ .'/'."file_json.txt", "r") or die("Unable to open file!");
+		$jsonFile = fread($myfile,filesize(__DIR__ .'/'."file_json.txt"));
+		echo fread($myfile,filesize(__DIR__ .'/'."file_json.txt"));
+	fclose($myfile);
+	?>
+	<input type="hidden" id="current-json-file" name="current_json_file" value="<?php echo $jsonFile; ?>" />
 	<div class="left-content">
 		<div class="content-action">
 			<button type="button" id="save-canvas">Save Canvas</button>
