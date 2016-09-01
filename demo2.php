@@ -99,7 +99,7 @@
 			</div>
 		</div>
 		<div class="content-action" style="">
-			<button id="preview-canvas" type="button">Preview</button>
+			<button id="preview-canvas" type="button">Preview ss</button>
 		</div>
 		<div class="content-action" style="">
 			<button id="save-to-json" type="button">Save To json</button>
