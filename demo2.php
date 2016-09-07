@@ -50,10 +50,23 @@
 	<?php 
 	$myfile = fopen(__DIR__ .'/'."file_json.txt", "r") or die("Unable to open file!");
 		$jsonFile = fread($myfile,filesize(__DIR__ .'/'."file_json.txt"));
-		echo fread($myfile,filesize(__DIR__ .'/'."file_json.txt"));
+		// echo fread($myfile,filesize(__DIR__ .'/'."file_json.txt"));
 	fclose($myfile);
 	?>
 	<input type="hidden" id="current-json-file" name="current_json_file" value="<?php echo $jsonFile; ?>" />
+	<?php /* Json Objecs */ ?>
+	<?php 
+	$canvasSide = '';
+	$canvasJson = '';
+	$dataJsonfile = fopen(__DIR__ .'/assets/json/'.$jsonFile, "r") or die("Unable to open file!");
+		$canvasSide = fread($dataJsonfile,filesize(__DIR__ .'/assets/json/'.$jsonFile));
+		$arCanvasSied = json_decode($canvasSide);
+		$arCanvasSied = (array)$arCanvasSied;
+		$arCanvansJson = $arCanvasSied['json'];
+		$canvasJson = json_encode($arCanvansJson);
+	fclose($dataJsonfile);
+	?>
+	<input type="text" id="data-json-code" value="<?php echo htmlentities($canvasJson);?>" />
 	<div class="left-content">
 		<div class="content-action">
 			<button type="button" id="save-canvas">Save Canvas</button>
@@ -108,10 +121,14 @@
 			</div>
 		</div>
 		<div class="content-action" style="">
-			<button id="preview-canvas" type="button">Preview</button>
+			<span id="gunny-zoom-label"></span>
+			<button type="button" id="gunny-zoom-out">Zoom Out</button>
+			<button type="button" id="gunny-zoom-in">Zoom In</button>
 		</div>
 		<div class="content-action" style="">
-			<button id="save-to-json" type="button">Save To json</button>
+			<button id="preview-canvas" type="button">Preview</button>
+			<button id="laod-from-json" type="button">Load From Json</button>
+			<button id="gunny-check-obj" type="button">Check Objecs</button>
 		</div>
 	</div>
 	<div class="right-content">
