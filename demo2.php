@@ -4,6 +4,7 @@
     <title>New Demo</title>
 	<script src="js/jquery-1.8.3.min.js" ></script>
 	<script src="js/fabric2.js" ></script>
+	<script src="https://rawgit.com/ArthurClemens/Javascript-Undo-Manager/master/lib/undomanager.js"></script>
 	<script src="js/gunny.js" ></script>
 	<link href="js/style.css" media="all" type="text/css" rel="stylesheet">
 	
@@ -129,6 +130,11 @@
 			<button id="preview-canvas" type="button">Preview</button>
 			<button id="laod-from-json" type="button">Load From Json</button>
 			<button id="gunny-check-obj" type="button">Check Objecs</button>
+		</div>
+		<div class="content-action" style="">
+			<button id="undo" type="button">undo</button>
+			<button id="redo" type="button">Redo</button>
+			<button id="add-test-obj" type="button">Redo</button>
 		</div>
 	</div>
 	<div class="right-content">

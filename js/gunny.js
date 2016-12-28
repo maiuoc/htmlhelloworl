@@ -1,10 +1,13 @@
 jQuery(document).ready(function(){
+	var undoManager = new UndoManager();
 	gunny  = {
 		allCanvas : {},
 		urlSaveJsonFile : $('#base-url').length ? $('#base-url').val() : '',
 		canvas_default_zoom : 100,
 		default_width : 0,
 		default_height : 0,
+		people : {},
+		historyJson : {},
 		saveToJson : function ()
 		{
 			
@@ -367,6 +370,7 @@ jQuery(document).ready(function(){
 					_canvans.add(image).setActiveObject(image);
 					callback && callback();
 				});
+				this.addHistories();
 			}
 			else
 			{
@@ -403,6 +407,7 @@ jQuery(document).ready(function(){
 				_canvans.add(loadObject).setActiveObject(loadObject);
 				
 			})
+			this.addHistories();
 		},
 		addText : function (text, fontSize,options)
 		{
@@ -509,9 +514,77 @@ jQuery(document).ready(function(){
 				
 			});
 		},
+		addPerson : function(id, name) {
+			// console.log(id);
+			this.people[id] = name;
+		},
+		removePerson : function(id) {
+			// console.log(id);
+			delete this.people[id];
+		},
+		createPerson : function (id, name) {
+			// first creation
+			var self = this;
+			self.addPerson(id, name);
+			
+			// undoManager = new UndoManager();
+			// make undo-able
+			undoManager.add({
+				undo: function() {
+					self.removePerson(id)
+				},
+				redo: function() {
+					self.addPerson(id, name);
+				}
+			});
+		},
+		addObjecHistory : function(id,stringJson)
+		{
+			console.log(id);
+			this.historyJson[id] = stringJson;
+		},
+		removeObjecHistory : function(id)
+		{
+			console.log(id);
+			delete this.historyJson[id];
+		},
+		//add history for canvas
+		addHistories : function()
+		{
+			var self = this;
+			currentCanvans = this.getActiveCanvas(1);
+			// undoManager = new UndoManager();
+			var stringJson = currentCanvans.toJSON();
+			var objDate = new Date();
+			id = objDate.getTime();
+			self.addObjecHistory(id, stringJson);
+			// make undo-able
+			undoManager.add({
+				undo: function() {
+					self.removeObjecHistory(id)
+				},
+				redo: function() {
+					self.addObjecHistory(id, stringJson);
+				}
+			});
+		},
 		init : function()
 		{
 			var self = this;
+			// undoManager = new UndoManager();
+			 self.createPerson(101, "ABC");
+			/*self.createPerson(102, "Mary");
+			self.createPerson(103, "Maryzxcxz");
+			console.log("people", self.people); // {101: "John", 102: "Mary"}
+			
+			undoManager.undo();
+			console.log("people", self.people); // {101: "John"}
+
+			undoManager.undo();
+			console.log("people", self.people); // {}
+
+			undoManager.redo();
+			console.log("people", self.people); // {101: "John"} */
 			self.prepareCanvans();
 			self.initCanvas();
 			self.canvasEvent();
@@ -584,6 +657,23 @@ jQuery(document).ready(function(){
 			});
 			$('#gunny-check-obj').click(function(){
 				self.checkGunnyCanvas();
+			});
+			$('#undo').click(function(){
+				undoManager.undo();
+				// console.log(self.historyJson);
+				console.log("people", self.people)
+				
+			})
+			$('#redo').click(function(){
+				undoManager.redo();
+				// console.log(self.historyJson);
+				console.log("people", self.people)
+			});
+			$('#add-test-obj').click(function(){
+					var objDate = new Date();
+					id = objDate.getTime();
+				 self.createPerson(id, id+"ABC");
+				 
 			})
 		}
 	}
