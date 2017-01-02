@@ -7,20 +7,25 @@ jQuery(document).ready(function(){
 		default_width : 0,
 		default_height : 0,
 		people : {},
-		historyJson : {},
-		saveToJson : function ()
+		historyJson : [],
+		historyId : 0,
+		saveToJson : function (exportFileJson)
 		{
 			
 			//canvassie available
 			var arCanvasSide = {color_code : '',color_id : '0', filename : '',final_price : 0.00,product_id : 2};
 			var currentCanvans = this.getActiveCanvas(1);
-			console.log(this.gunnyZoom.resetZoomBeforeSave(currentCanvans));
+			// console.log(this.gunnyZoom.resetZoomBeforeSave(currentCanvans));
 			var customAttrs = ['name', 'isrc', 'price', 'object_type', 'selectable', 'scale', 'evented'];
 			//console.log(JSON.stringify(currentCanvans));
 			var objects = currentCanvans.getObjects();
-			//console.log(currentCanvans.toJSON(customAttrs));
+			// console.log(currentCanvans.toJSON(customAttrs));
 			arCanvasSide.json = currentCanvans.toJSON(customAttrs);
-			arCanvasSide.svg = currentCanvans.toSVG();
+			if(exportFileJson == 1)
+			{
+				arCanvasSide.svg = currentCanvans.toSVG();
+			}
+			
 			// console.log(arCanvasSide);
 			objects.forEach(function(o) {
 				// console.log(o);
@@ -29,19 +34,26 @@ jQuery(document).ready(function(){
 					arCanvasSide.final_price += parseFloat(o.price);
 				}
 			});
-			this.saveJsonFile(arCanvasSide,function(response){
-				response = JSON.parse(response);
-				if(response.status == 'success') 
-				{
-					//preview svg image
-					var svgCanvas = currentCanvans.toSVG();
-					$('.canvas-preview').html(svgCanvas);
-				}
-				else
-				{
-					alert('error');
-				}
-			})
+			if(exportFileJson == 1)
+			{
+				this.saveJsonFile(arCanvasSide,function(response){
+					response = JSON.parse(response);
+					if(response.status == 'success') 
+					{
+						//preview svg image
+						var svgCanvas = currentCanvans.toSVG();
+						$('.canvas-preview').html(svgCanvas);
+					}
+					else
+					{
+						alert('error');
+					}
+				})
+			}
+			else
+			{
+				return arCanvasSide;
+			}
 			
 		},
 		checkGunnyCanvas : function()
@@ -107,10 +119,12 @@ jQuery(document).ready(function(){
 			this.default_width = currentCanvans.getWidth();
 			this.default_height = currentCanvans.getHeight();
 			this.addBackgroundLayer('assets/blue-background.png',options);
+			
 			//add mask layer
 			// this.addOverlayLayer('assets/overlay.png',options);
 			//add background color
 			this.addBackgroundColorLayer('#09F745');
+			// this.addHistories();
 		},
 		gunnyLoadFromJson : function(stringJson)
 		{
@@ -362,6 +376,7 @@ jQuery(document).ready(function(){
 						transparentCorners: false,
 						centeredScaling:true,
 						rotatingPointOffset: 40,
+						borderColor : '#FF0000',
 						padding: 1
 					});
 					image.setControlVisible('mt', false);
@@ -491,7 +506,6 @@ jQuery(document).ready(function(){
 		{
 			currentCanvans = this.getActiveCanvas(1);
 				currentCanvans.on('object:selected', function(e) { // or 'object:added'
-				console.log(e.target);
 				if(e.target)
 				{
 					if(e.target.object_type == 'image_svg')
@@ -513,84 +527,77 @@ jQuery(document).ready(function(){
 				}
 				
 			});
-		},
-		addPerson : function(id, name) {
-			// console.log(id);
-			this.people[id] = name;
-		},
-		removePerson : function(id) {
-			// console.log(id);
-			delete this.people[id];
-		},
-		createPerson : function (id, name) {
-			// first creation
-			var self = this;
-			self.addPerson(id, name);
-			
-			// undoManager = new UndoManager();
-			// make undo-able
-			undoManager.add({
-				undo: function() {
-					self.removePerson(id)
-				},
-				redo: function() {
-					self.addPerson(id, name);
-				}
+			currentCanvans.on("mouse:up",function(e){
+				console.log('Test 9099');
 			});
-		},
-		addObjecHistory : function(id,stringJson)
-		{
-			console.log(id);
-			this.historyJson[id] = stringJson;
 		},
 		removeObjecHistory : function(id)
 		{
-			console.log(id);
-			delete this.historyJson[id];
+			var tempHistory = this.historyJson;
+			console.log(tempHistory);
+			var i = 0, index = -1;
+			for (i = 0; i < tempHistory.length; i += 1) {
+				if (tempHistory[i].id === id) {
+					index = i;
+				}
+			}
+			if (index !== -1) {
+				tempHistory.splice(index, 1);
+			}
+			this.historyJson = tempHistory;
+			this.undoResoCanvas();
 		},
 		//add history for canvas
-		addHistories : function()
+		addHistories : function(attrs)
 		{
 			var self = this;
-			currentCanvans = this.getActiveCanvas(1);
-			// undoManager = new UndoManager();
-			var stringJson = currentCanvans.toJSON();
-			var objDate = new Date();
-			id = objDate.getTime();
-			self.addObjecHistory(id, stringJson);
-			// make undo-able
+			var tempHistory = this.historyJson;
+			tempHistory.push(attrs);
+			this.undoResoCanvas();
 			undoManager.add({
-				undo: function() {
-					self.removeObjecHistory(id)
+				undo: function () {
+					self.removeObjecHistory(attrs.id);
 				},
-				redo: function() {
-					self.addObjecHistory(id, stringJson);
+				redo: function () {
+					self.addHistories(attrs);
 				}
 			});
 		},
+		undoResoCanvas : function()
+		{
+			var canvasHistoies = this.historyJson;
+			console.log(canvasHistoies);
+			var currentHistoryJson = null;
+			for(var key in canvasHistoies)
+			{
+				currentHistoryJson = canvasHistoies[key];
+				// currentHistoryJson = JSON.stringify(currentHistoryJson);
+				console.log(key);
+			}
+			// console.log(currentHistoryJson);
+			/* if(currentHistoryJson)
+			{
+				this.gunnyLoadFromJson(currentHistoryJson);
+			} */
+		},
+		fuckKingFunction : function()
+		{
+			var dmObjects = this.people;
+			for(var key in dmObjects)
+			{
+				console.log(key + dmObjects[key]);
+			}
+		},
 		init : function()
 		{
+			var idHistory = 0;
 			var self = this;
-			// undoManager = new UndoManager();
-			 self.createPerson(101, "ABC");
-			/*self.createPerson(102, "Mary");
-			self.createPerson(103, "Maryzxcxz");
-			console.log("people", self.people); // {101: "John", 102: "Mary"}
-			
-			undoManager.undo();
-			console.log("people", self.people); // {101: "John"}
-
-			undoManager.undo();
-			console.log("people", self.people); // {}
-
-			undoManager.redo();
-			console.log("people", self.people); // {101: "John"} */
 			self.prepareCanvans();
 			self.initCanvas();
 			self.canvasEvent();
 			//event jquery
 			$('#save-canvas').click(function(){
-				self.saveToJson();
+				self.saveToJson(1);
 			});
 			$('.list-image').click(function(){
 				var imageSrc = $(this).attr('src');
@@ -638,7 +645,7 @@ jQuery(document).ready(function(){
 			}) */
 			$('#laod-from-json').click(function(){
 				var stringJson = $('#data-json-code').val();
-				// console.log(stringJson);
+				//console.log(stringJson);
 				self.gunnyLoadFromJson(stringJson);
 			});
 			$('#gunny-zoom-out').click(function(){
@@ -660,21 +667,20 @@ jQuery(document).ready(function(){
 			});
 			$('#undo').click(function(){
 				undoManager.undo();
-				// console.log(self.historyJson);
-				console.log("people", self.people)
-				
+				//self.undoResoCanvas();
 			})
 			$('#redo').click(function(){
 				undoManager.redo();
-				// console.log(self.historyJson);
-				console.log("people", self.people)
+				//self.undoResoCanvas();
 			});
 			$('#add-test-obj').click(function(){
-					var objDate = new Date();
-					id = objDate.getTime();
-				 self.createPerson(id, id+"ABC");
-				 
-			})
+				self.historyId++;
+				var attrs = {
+					id : self.historyId,
+					text : 'maiuoc '+self.historyId
+				}
+				self.addHistories(attrs);
+			});
 		}
 	}
 	// gunny.init();
