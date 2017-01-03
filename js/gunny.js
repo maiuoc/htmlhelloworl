@@ -9,6 +9,7 @@ jQuery(document).ready(function(){
 		people : {},
 		historyJson : [],
 		historyId : 0,
+		eventObjectUpdate : 0,
 		saveToJson : function (exportFileJson)
 		{
 			
@@ -124,7 +125,15 @@ jQuery(document).ready(function(){
 			// this.addOverlayLayer('assets/overlay.png',options);
 			//add background color
 			this.addBackgroundColorLayer('#09F745');
-			// this.addHistories();
+			this.historyId++;
+			var currentCanvans = this.getActiveCanvas(1);
+			var canvasJson = currentCanvans.toJSON();
+			var attrs = {
+				id : this.historyId,
+				json : canvasJson
+			}
+			this.addHistories(attrs,2);
+			undoManager.setCallback(this.undoManagerUI());
 		},
 		gunnyLoadFromJson : function(stringJson)
 		{
@@ -357,6 +366,7 @@ jQuery(document).ready(function(){
 		},
 		addImage : function(imageSrc,options,callback)
 		{
+			var self = this;
 			var options = options || {};
 			var _canvans = this.getActiveCanvas(1);
 			var ext = imageSrc.split(".");
@@ -385,7 +395,7 @@ jQuery(document).ready(function(){
 					_canvans.add(image).setActiveObject(image);
 					callback && callback();
 				});
-				this.addHistories();
+				self.historyWhenAddObject();
 			}
 			else
 			{
@@ -420,9 +430,9 @@ jQuery(document).ready(function(){
 				loadObject.setCoords();
 				_canvans.centerObject(loadObject);
 				_canvans.add(loadObject).setActiveObject(loadObject);
-				
+				self.historyWhenAddObject();
 			})
-			this.addHistories();
+			
 		},
 		addText : function (text, fontSize,options)
 		{
@@ -451,6 +461,7 @@ jQuery(document).ready(function(){
 			textObjbect.setControlVisible('mt',false);
 			_canvans.centerObject(textObjbect);
 			_canvans.add(textObjbect).setActiveObject(textObjbect);
+
 		},
 		updateColorObject : function(color,_canvans)
 		{
@@ -464,6 +475,7 @@ jQuery(document).ready(function(){
 					fill : color
 				});
 				_canvans.add(newObj).setActiveObject(newObj);
+				this.historyWhenAddObject();
 			}
 		},
 		updateText : function(mValue,task,_canvans)
@@ -490,6 +502,7 @@ jQuery(document).ready(function(){
 			}
 			_canvans.add(newObj).setActiveObject(newObj);
 			_canvans.renderAll();
+			this.historyWhenAddObject();
 		},
 		getActiveCanvas : function(sideId)
 		{
@@ -504,8 +517,10 @@ jQuery(document).ready(function(){
 		},
 		canvasEvent : function()
 		{
+			var self = this;
 			currentCanvans = this.getActiveCanvas(1);
 				currentCanvans.on('object:selected', function(e) { // or 'object:added'
+				console.log('selected fire');
 				if(e.target)
 				{
 					if(e.target.object_type == 'image_svg')
@@ -527,9 +542,56 @@ jQuery(document).ready(function(){
 				}
 				
 			});
+			currentCanvans.on("object:added",function(e){
+				self.eventObjectUpdate = 1;
+				
+				console.log('add fire');
+			})
 			currentCanvans.on("mouse:up",function(e){
-				console.log('Test 9099');
+				if(e.target)
+				{
+					console.log('mouse up fire');
+					self.historyId++;
+					var currentCanvans = self.getActiveCanvas(1);
+					var canvasJson = currentCanvans.toJSON();
+					var attrs = {
+						id : self.historyId,
+						json : canvasJson
+					}
+					self.addHistories(attrs,2);
+					undoManager.setCallback(self.undoManagerUI());
+				}
+				
+				// console.log('Test 9099');
+				
 			});
+		},
+		historyWhenAddObject : function()
+		{
+			var self = this;
+			self.eventObjectUpdate = 0;
+				sec = 0;
+				var jCount = 0;
+				var timer = setInterval(function() 
+				{
+					var secAa = ++sec % 60;
+					if(self.eventObjectUpdate == 1)
+					{
+						self.historyId++;
+						var currentCanvans = self.getActiveCanvas(1);
+						var canvasJson = currentCanvans.toJSON();
+						var attrs = {
+							id : self.historyId,
+							json : canvasJson
+						}
+						self.addHistories(attrs,2);
+						undoManager.setCallback(self.undoManagerUI());
+						clearInterval(timer);
+					}
+				}, 1000);
+				setTimeout(function () {
+					clearInterval(timer);
+				}, 11000);
 		},
 		removeObjecHistory : function(id)
 		{
@@ -548,44 +610,70 @@ jQuery(document).ready(function(){
 			this.undoResoCanvas();
 		},
 		//add history for canvas
-		addHistories : function(attrs)
+		addHistories : function(attrs,restoreCanvan)
 		{
 			var self = this;
 			var tempHistory = this.historyJson;
 			tempHistory.push(attrs);
-			this.undoResoCanvas();
+			console.log(tempHistory);
+			this.historyJson = tempHistory;
+			var resCanvan = restoreCanvan || 1;
+			if(resCanvan == 1)
+			{
+				this.undoResoCanvas();
+			}
 			undoManager.add({
 				undo: function () {
 					self.removeObjecHistory(attrs.id);
 				},
 				redo: function () {
-					self.addHistories(attrs);
+					self.addHistories(attrs,1);
 				}
 			});
+		},
+		undoManagerUI : function()
+		{
+			var tempHistory = this.historyJson;
+			if(tempHistory.length == 1)
+			{
+				$('#undo').prop('disabled',true);
+				return false;
+			}
+			if(undoManager.hasUndo())
+			{
+				$('#undo').prop('disabled',false);
+			}
+			else
+			{
+				$('#undo').prop('disabled',true);
+			}
+			if(undoManager.hasRedo())
+			{
+				$('#redo').prop('disabled',false);
+			}
+			else
+			{
+				$('#redo').prop('disabled',true);
+			}
 		},
 		undoResoCanvas : function()
 		{
 			var canvasHistoies = this.historyJson;
 			console.log(canvasHistoies);
+			var dmId = 0;
 			var currentHistoryJson = null;
-			for(var key in canvasHistoies)
+			for(var i = 0; i < canvasHistoies.length; i++)
 			{
-				currentHistoryJson = canvasHistoies[key];
+				currentHistoryJson = canvasHistoies[i].json;
+				dmId = canvasHistoies[i].id;
 				// currentHistoryJson = JSON.stringify(currentHistoryJson);
-				console.log(key);
+				// console.log(key);
 			}
-			// console.log(currentHistoryJson);
-			/* if(currentHistoryJson)
+			console.log(dmId);
+			currentHistoryJson = JSON.stringify(currentHistoryJson);
+			if(currentHistoryJson)
 			{
 				this.gunnyLoadFromJson(currentHistoryJson);
-			} */
-		},
-		fuckKingFunction : function()
-		{
-			var dmObjects = this.people;
-			for(var key in dmObjects)
-			{
-				console.log(key + dmObjects[key]);
 			}
 		},
 		init : function()
@@ -667,20 +755,20 @@ jQuery(document).ready(function(){
 			});
 			$('#undo').click(function(){
 				undoManager.undo();
-				//self.undoResoCanvas();
+				self.undoManagerUI();
 			})
 			$('#redo').click(function(){
 				undoManager.redo();
-				//self.undoResoCanvas();
+				self.undoManagerUI();
 			});
-			$('#add-test-obj').click(function(){
+		/* 	$('#add-test-obj').click(function(){
 				self.historyId++;
 				var attrs = {
 					id : self.historyId,
 					text : 'maiuoc '+self.historyId
 				}
 				self.addHistories(attrs);
-			});
+			}); */
 		}
 	}
 	// gunny.init();
