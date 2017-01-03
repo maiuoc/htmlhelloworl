@@ -119,12 +119,12 @@ jQuery(document).ready(function(){
 			var options = {price : 10};
 			this.default_width = currentCanvans.getWidth();
 			this.default_height = currentCanvans.getHeight();
-			this.addBackgroundLayer('assets/blue-background.png',options);
+			// this.addBackgroundLayer('assets/blue-background.png',options);
 			
 			//add mask layer
 			// this.addOverlayLayer('assets/overlay.png',options);
 			//add background color
-			this.addBackgroundColorLayer('#09F745');
+			// this.addBackgroundColorLayer('#09F745');
 			this.historyId++;
 			var currentCanvans = this.getActiveCanvas(1);
 			var canvasJson = currentCanvans.toJSON();
@@ -233,7 +233,8 @@ jQuery(document).ready(function(){
 					isrc : imageSrc,
 					selectTable : false,
 					evented : false,
-					hasBorder : false
+					hasBorder : false,
+					hasControls : false
 				});
 				_canvans.setOverlayImage(image, _canvans.renderAll.bind(_canvans));
 			})
@@ -262,6 +263,7 @@ jQuery(document).ready(function(){
 				selectTable : false,
 				evented: false,
 				hasBorder : false,
+				hasControls : false
 			});
 			_canvans.insertAt(redirctBgColor,0);
 			_canvans.renderAll();
@@ -367,6 +369,7 @@ jQuery(document).ready(function(){
 		addImage : function(imageSrc,options,callback)
 		{
 			var self = this;
+			this.eventObjectUpdate = 0;
 			var options = options || {};
 			var _canvans = this.getActiveCanvas(1);
 			var ext = imageSrc.split(".");
@@ -386,8 +389,7 @@ jQuery(document).ready(function(){
 						transparentCorners: false,
 						centeredScaling:true,
 						rotatingPointOffset: 40,
-						borderColor : '#FF0000',
-						padding: 1
+						//borderColor : '#FF0000',
 					});
 					image.setControlVisible('mt', false);
 					image.setCoords();
@@ -405,6 +407,8 @@ jQuery(document).ready(function(){
 		},
 		addSvgImage : function(imageSrc,options,callback)
 		{
+			var self = this;
+			self.eventObjectUpdate = 0;
 			var options = options || {};
 			var _canvans = this.getActiveCanvas(1); 
 			fabric.loadSVGFromURL(imageSrc,function(objects,_svgOptions){
@@ -436,6 +440,7 @@ jQuery(document).ready(function(){
 		},
 		addText : function (text, fontSize,options)
 		{
+			this.eventObjectUpdate = 0;
 			var options = options || {};
 			var _canvans = this.getActiveCanvas(1); 
 			var textObjbect = new fabric.Text(text,{
@@ -461,14 +466,17 @@ jQuery(document).ready(function(){
 			textObjbect.setControlVisible('mt',false);
 			_canvans.centerObject(textObjbect);
 			_canvans.add(textObjbect).setActiveObject(textObjbect);
+			this.historyWhenAddObject();
 
 		},
 		updateColorObject : function(color,_canvans)
 		{
+			this.eventObjectUpdate = 0;
 			var _canvans = _canvans|| this.getActiveCanvas(1);
 			obj = _canvans.getActiveObject();
 			if(obj.object_type == 'image_svg' || obj.object_type == 'text')
 			{
+				console.log(obj.object_type);
 				var newObj = obj;
 				_canvans.remove(obj);
 				newObj.set({
@@ -480,6 +488,7 @@ jQuery(document).ready(function(){
 		},
 		updateText : function(mValue,task,_canvans)
 		{
+			this.eventObjectUpdate = 0;
 			var _canvans = _canvans|| this.getActiveCanvas(1);
 			obj = _canvans.getActiveObject();
 			if(obj.object_type != 'text')
@@ -545,10 +554,15 @@ jQuery(document).ready(function(){
 			currentCanvans.on("object:added",function(e){
 				self.eventObjectUpdate = 1;
 				
-				console.log('add fire');
+				console.log('add fire '+self.eventObjectUpdate);
+			})
+			currentCanvans.on("after:render",function(e){
+				// self.eventObjectUpdate = 1;
+				
+				console.log('after:render');
 			})
 			currentCanvans.on("mouse:up",function(e){
-				if(e.target)
+				/* if(e.target)
 				{
 					console.log('mouse up fire');
 					self.historyId++;
@@ -560,38 +574,51 @@ jQuery(document).ready(function(){
 					}
 					self.addHistories(attrs,2);
 					undoManager.setCallback(self.undoManagerUI());
-				}
+				} */
 				
 				// console.log('Test 9099');
 				
 			});
+			currentCanvans.on("object:modified",function(e){
+				// console.log('modified fire');
+				console.log('mouse up fire');
+					self.historyId++;
+					var currentCanvans = self.getActiveCanvas(1);
+					var canvasJson = currentCanvans.toJSON();
+					var attrs = {
+						id : self.historyId,
+						json : canvasJson
+					}
+					self.addHistories(attrs,2);
+					undoManager.setCallback(self.undoManagerUI());
+			})
 		},
-		historyWhenAddObject : function()
+		historyWhenAddObject : function(oktime)
 		{
 			var self = this;
-			self.eventObjectUpdate = 0;
-				sec = 0;
-				var jCount = 0;
-				var timer = setInterval(function() 
+			sec = 0;
+			var jCount = 0;
+			var timer = setInterval(function() 
+			{
+				var secAa = ++sec % 60;
+				if(self.eventObjectUpdate == 1)
 				{
-					var secAa = ++sec % 60;
-					if(self.eventObjectUpdate == 1)
-					{
-						self.historyId++;
-						var currentCanvans = self.getActiveCanvas(1);
-						var canvasJson = currentCanvans.toJSON();
-						var attrs = {
-							id : self.historyId,
-							json : canvasJson
-						}
-						self.addHistories(attrs,2);
-						undoManager.setCallback(self.undoManagerUI());
-						clearInterval(timer);
+					self.historyId++;
+					var currentCanvans = self.getActiveCanvas(1);
+					var canvasJson = currentCanvans.toJSON();
+					var attrs = {
+						id : self.historyId,
+						json : canvasJson
 					}
-				}, 1000);
-				setTimeout(function () {
+					self.addHistories(attrs,2);
+					undoManager.setCallback(self.undoManagerUI());
 					clearInterval(timer);
-				}, 11000);
+				}
+			}, 1000);
+			setTimeout(function () {
+				clearInterval(timer);
+			}, 11000);
+			
 		},
 		removeObjecHistory : function(id)
 		{
@@ -683,6 +710,7 @@ jQuery(document).ready(function(){
 			self.prepareCanvans();
 			self.initCanvas();
 			self.canvasEvent();
+			undoManager.setLimit(5);
 			//event jquery
 			$('#save-canvas').click(function(){
 				self.saveToJson(1);
