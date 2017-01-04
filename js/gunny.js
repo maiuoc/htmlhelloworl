@@ -10,6 +10,9 @@ jQuery(document).ready(function(){
 		historyJson : [],
 		historyId : 0,
 		eventObjectUpdate : 0,
+		undoRedoClick : 0, 
+		historySizeJson : 0,
+		historyUpdateObjec : 0,
 		saveToJson : function (exportFileJson)
 		{
 			
@@ -397,7 +400,7 @@ jQuery(document).ready(function(){
 					_canvans.add(image).setActiveObject(image);
 					callback && callback();
 				});
-				self.historyWhenAddObject();
+				// self.historyWhenAddObject();
 			}
 			else
 			{
@@ -434,7 +437,7 @@ jQuery(document).ready(function(){
 				loadObject.setCoords();
 				_canvans.centerObject(loadObject);
 				_canvans.add(loadObject).setActiveObject(loadObject);
-				self.historyWhenAddObject();
+				// self.historyWhenAddObject();
 			})
 			
 		},
@@ -466,7 +469,7 @@ jQuery(document).ready(function(){
 			textObjbect.setControlVisible('mt',false);
 			_canvans.centerObject(textObjbect);
 			_canvans.add(textObjbect).setActiveObject(textObjbect);
-			this.historyWhenAddObject();
+			// this.historyWhenAddObject();
 
 		},
 		updateColorObject : function(color,_canvans)
@@ -483,7 +486,7 @@ jQuery(document).ready(function(){
 					fill : color
 				});
 				_canvans.add(newObj).setActiveObject(newObj);
-				this.historyWhenAddObject();
+				// this.historyWhenAddObject();
 			}
 		},
 		updateText : function(mValue,task,_canvans)
@@ -511,7 +514,7 @@ jQuery(document).ready(function(){
 			}
 			_canvans.add(newObj).setActiveObject(newObj);
 			_canvans.renderAll();
-			this.historyWhenAddObject();
+			// this.historyWhenAddObject();
 		},
 		getActiveCanvas : function(sideId)
 		{
@@ -553,13 +556,34 @@ jQuery(document).ready(function(){
 			});
 			currentCanvans.on("object:added",function(e){
 				self.eventObjectUpdate = 1;
+				console.log('clik '+self.undoRedoClick );
+				if(self.undoRedoClick !== 1)
+				{
+					self.historyId++;
+					var currentCanvans = self.getActiveCanvas(1);
+					var canvasJson = currentCanvans.toJSON();
+					var attrs = {
+						id : self.historyId,
+						json : canvasJson
+					}
+					self.addHistories(attrs,2);
+					undoManager.setCallback(self.undoManagerUI());
+				}
+				if(self.undoRedoClick == 1)
+				{
+					self.historyUpdateObjec++;
+					if(self.historyUpdateObjec == self.historySizeJson)
+					{
+						self.undoRedoClick = 0;
+					}
+				}
 				
-				console.log('add fire '+self.eventObjectUpdate);
+				// console.log('add fire '+self.eventObjectUpdate);
 			})
 			currentCanvans.on("after:render",function(e){
 				// self.eventObjectUpdate = 1;
 				
-				console.log('after:render');
+				// console.log('after:render');
 			})
 			currentCanvans.on("mouse:up",function(e){
 				/* if(e.target)
@@ -580,8 +604,6 @@ jQuery(document).ready(function(){
 				
 			});
 			currentCanvans.on("object:modified",function(e){
-				// console.log('modified fire');
-				console.log('mouse up fire');
 					self.historyId++;
 					var currentCanvans = self.getActiveCanvas(1);
 					var canvasJson = currentCanvans.toJSON();
@@ -642,7 +664,6 @@ jQuery(document).ready(function(){
 			var self = this;
 			var tempHistory = this.historyJson;
 			tempHistory.push(attrs);
-			console.log(tempHistory);
 			this.historyJson = tempHistory;
 			var resCanvan = restoreCanvan || 1;
 			if(resCanvan == 1)
@@ -686,7 +707,7 @@ jQuery(document).ready(function(){
 		undoResoCanvas : function()
 		{
 			var canvasHistoies = this.historyJson;
-			console.log(canvasHistoies);
+			// console.log(canvasHistoies);
 			var dmId = 0;
 			var currentHistoryJson = null;
 			for(var i = 0; i < canvasHistoies.length; i++)
@@ -696,8 +717,10 @@ jQuery(document).ready(function(){
 				// currentHistoryJson = JSON.stringify(currentHistoryJson);
 				// console.log(key);
 			}
-			console.log(dmId);
+			this.historySizeJson = currentHistoryJson.objects.length;
+			this.historyUpdateObjec = 0;
 			currentHistoryJson = JSON.stringify(currentHistoryJson);
+			
 			if(currentHistoryJson)
 			{
 				this.gunnyLoadFromJson(currentHistoryJson);
@@ -782,10 +805,12 @@ jQuery(document).ready(function(){
 				self.checkGunnyCanvas();
 			});
 			$('#undo').click(function(){
+				self.undoRedoClick = 1;
 				undoManager.undo();
 				self.undoManagerUI();
 			})
 			$('#redo').click(function(){
+				self.undoRedoClick = 1;
 				undoManager.redo();
 				self.undoManagerUI();
 			});
